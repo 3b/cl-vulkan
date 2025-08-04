@@ -87,7 +87,7 @@
 
 (defun get-queue-family-index-with-dedicated-compute-support (gpu)
   (loop for i from 0 for queue-family in (queue-families gpu)
-     do (when (eq VK_QUEUE_COMPUTE_BIT (queue-flags queue-family))
+     do (when (eql VK_QUEUE_COMPUTE_BIT (queue-flags queue-family))
 	  (return-from get-queue-family-index-with-dedicated-compute-support i))
      finally (return nil)))
 
@@ -99,7 +99,7 @@
 
 (defun get-queue-family-index-with-dedicated-transfer-support (gpu)
   (loop for i from 0 for queue-family in (queue-families gpu)
-     do (when (eq VK_QUEUE_TRANSFER_BIT (queue-flags queue-family))
+     do (when (eql VK_QUEUE_TRANSFER_BIT (queue-flags queue-family))
 	  (return-from get-queue-family-index-with-dedicated-transfer-support i))
      finally (return nil)))
 
