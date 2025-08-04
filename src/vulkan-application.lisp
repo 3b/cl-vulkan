@@ -102,7 +102,6 @@
 	    (setf (default-logical-device dpy) device)
 
 	    (let ((command-pool (create-command-pool device index)))
-	      (push (list index command-pool) (command-pools device))
 	      (create-command-buffer device command-pool))
 
 	    (unless (or (zerop compute-queue-count)
