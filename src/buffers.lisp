@@ -94,7 +94,9 @@
 		                             :allocator allocator
 		                             :alignment (foreign-slot-value p-requirements
 						                            '(:struct VkMemoryRequirements)
-						                            '%vk::alignment))))))))
+						                            '%vk::alignment)
+                                             :size %vk::allocationSize
+                                             :properties %vk::memoryTypeIndex)))))))
 
 (defun bind-buffer-memory (device buffer buffer-memory &optional (offset 0))
   (vkBindBufferMemory (h device) (h buffer) (h buffer-memory) offset))
