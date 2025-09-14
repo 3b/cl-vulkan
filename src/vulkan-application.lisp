@@ -69,52 +69,54 @@
 		       (stippled-lines #+(or windows linux) t #+(or darwin) nil)
 		     &allow-other-keys)
   (let ((vulkan-instance (get-vulkan-instance dpy)))
-    (let ((debug-callback (when (debug-report-present? vulkan-instance)
-			    (create-debug-report-callback vulkan-instance 'debug-report-callback))))
-      (setf (debug-callback vulkan-instance) debug-callback)
-      
-      (let ((physical-devices (enumerate-physical-devices dpy)))
+    (when (and (debug-report-present? vulkan-instance)
+               (not (debug-callback vulkan-instance)))
+      (setf (debug-callback vulkan-instance)
+            (create-debug-report-callback vulkan-instance
+                                          'debug-report-callback)))
 
-	(setf (system-gpus dpy) physical-devices)
-	
-	(multiple-value-bind (gpu index) (block get-gpu
-					   (loop for gpu in physical-devices
-					         do (loop for queue-family in (queue-families gpu) for i from 0
-						          do (let ((queue-flags (slot-value queue-family 'queue-flags)))
-							       (when (not (zerop (logand queue-flags VK_QUEUE_GRAPHICS_BIT)))
-							         (return-from get-gpu (values gpu i)))))))
-	  ;;(declare (ignore index))
-	  (when (null gpu)
-	    (error "No graphics device available."))
-	  #+NIL(pick-graphics-gpu physical-devices surface)
-      
-	  (let* ((device (apply #'create-logical-device dpy gpu
-				:compute-queue-count compute-queue-count
-				:device-extensions
-				(list* VK_KHR_SWAPCHAIN_EXTENSION_NAME
-				       vulkan-device-extensions)
-				:rectangular-lines rectangular-lines
-				:stippled-lines stippled-lines
-				:enable-wide-lines wide-lines
-				:enable-geometry-shader (has-geometry-shader-p gpu)
-				args)))
+    (let ((physical-devices (enumerate-physical-devices dpy)))
 
-	    (setf (default-logical-device dpy) device)
+      (setf (system-gpus dpy) physical-devices)
 
-	    (let ((command-pool (create-command-pool device index)))
-	      (create-command-buffer device command-pool))
+      (multiple-value-bind (gpu index) (block get-gpu
+					 (loop for gpu in physical-devices
+					       do (loop for queue-family in (queue-families gpu) for i from 0
+						        do (let ((queue-flags (slot-value queue-family 'queue-flags)))
+							     (when (not (zerop (logand queue-flags VK_QUEUE_GRAPHICS_BIT)))
+							       (return-from get-gpu (values gpu i)))))))
+	;;(declare (ignore index))
+	(when (null gpu)
+	  (error "No graphics device available."))
+	#+NIL(pick-graphics-gpu physical-devices surface)
 
-	    (unless (or (zerop compute-queue-count)
-			(null compute-queue-count))
-              ;; todo: this needs to work for compute-queue-count > 1
-	      (multiple-value-bind (compute-queue compute-qfi)
-		  (compute-queue device)
-		(declare (ignore compute-queue))
-		(let ((command-pool (or (find-command-pool device compute-qfi)
-					(create-command-pool device compute-qfi))))
-		  (loop for i from 0 below compute-queue-count
-		     do (create-command-buffer device command-pool)))))
-	    
-	    (setf (default-descriptor-pool dpy) (create-descriptor-pool device))
-	    
-	    (values)))))))
+	(let* ((device (apply #'create-logical-device dpy gpu
+			      :compute-queue-count compute-queue-count
+			      :device-extensions
+			      (list* VK_KHR_SWAPCHAIN_EXTENSION_NAME
+				     vulkan-device-extensions)
+			      :rectangular-lines rectangular-lines
+			      :stippled-lines stippled-lines
+			      :enable-wide-lines wide-lines
+			      :enable-geometry-shader (has-geometry-shader-p gpu)
+			      args)))
+
+	  (setf (default-logical-device dpy) device)
+
+	  (let ((command-pool (create-command-pool device index)))
+	    (create-command-buffer device command-pool))
+
+	  (unless (or (zerop compute-queue-count)
+		      (null compute-queue-count))
+            ;; todo: this needs to work for compute-queue-count > 1
+	    (multiple-value-bind (compute-queue compute-qfi)
+		(compute-queue device)
+	      (declare (ignore compute-queue))
+	      (let ((command-pool (or (find-command-pool device compute-qfi)
+				      (create-command-pool device compute-qfi))))
+		(loop for i from 0 below compute-queue-count
+		      do (create-command-buffer device command-pool)))))
+
+	  (setf (default-descriptor-pool dpy) (create-descriptor-pool device))
+
+	  (values))))))
