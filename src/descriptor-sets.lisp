@@ -37,6 +37,7 @@
 	  
 	  (with-foreign-object (p-descriptor-set 'VkDescriptorSet)
 	    (check-vk-result (vkAllocateDescriptorSets (h device) p-alloc-info p-descriptor-set))
+            (assert (= 1 dsl-count)) ;; 2+ not handled yet
 	    (make-instance 'descriptor-set
 			   :handle (mem-aref p-descriptor-set 'VkDescriptorSet)
 			   :device device

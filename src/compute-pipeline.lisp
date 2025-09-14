@@ -63,6 +63,7 @@
 						   (h (slot-value ci 'base-pipeline)))
 			%vk::basePipelineIndex (slot-value ci 'base-pipeline-index))))))
 
+      (assert (= 1 create-info-count))
       (with-foreign-object (p-pipelines 'VkPipeline 1)
 	(check-vk-result
 	 (vkCreateComputePipelines (h device) (h pipeline-cache)
