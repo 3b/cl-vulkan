@@ -218,7 +218,7 @@
 	(fb-height))
     (flet ((try-recreate ()
 
-	     (multiple-value-setq (fb-width fb-height) (clui:window-framebuffer-size window))
+	     (multiple-value-setq (fb-width fb-height) (window-framebuffer-size window))
 	     (when (not (or (zerop fb-width) (zerop fb-height)))
 		 
 	       (let* ((surface (render-surface window))
@@ -245,8 +245,7 @@
 		   t)))))
 	
 	(loop until (try-recreate)
-	   do #+glfw(glfwWaitEvents)
-	     #-glfw(clui::wait-events (clui::window-display window)))
+	   do (wait-events window))
 	(values))))
 
 (defun destroy-swapchain (swapchain)

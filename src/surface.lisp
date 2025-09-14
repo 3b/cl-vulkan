@@ -38,7 +38,8 @@
 (defun create-window-surface (device window &key (allocator +null-allocator+))
   (let* ((surface
 	   (setf (render-surface window)
-		 (clui::create-native-window-surface (clui::window-display window) (get-vulkan-instance) window allocator)))
+                 (create-native-window-surface window (get-vulkan-instance)
+                                               allocator)))
 	 (gpu (physical-device device))
 	 (index (get-queue-family-index-with-wsi-support gpu surface)))
     (initialize-window-surface surface gpu index)

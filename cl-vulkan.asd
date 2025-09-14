@@ -23,21 +23,21 @@
 ;; but for now I don't want to fork that system
 #+(and darwin (not glfw))(cl:pushnew :objc cl:*features*)
 
-(defsystem cl-vulkan
-  :description "Bindings for using Vulkan with Common Lisp"
-  :depends-on (:cffi :bordeaux-threads #-glfw :clui)
-  :author "Andrew K Wolven <awolven@gmail.com>"
+
+(defsystem cl-vulkan/common
+  :depends-on (:cffi :bordeaux-threads :trivial-features)
+  :serial t
   :components
   ((:file "features")
-   #+glfw(:file "ifc/glfw/package")
-   #+glfw(:file "ifc/glfw/glfw")
-   #+glfw(:file "ifc/glfw/abstract-os-compat")
    (:file "ifc/vulkan/package")
+   (:file "src/package")
+   (:file "abstract-os")
+
    (:file "ifc/vulkan/vk-types")
    (:file "ifc/vulkan/s-type-table")
    (:file "ifc/vulkan/vk-macros")
    (:file "ifc/vulkan/vk-funcs")
-   (:file "src/package")
+
    (:file "src/utilities")
    (:file "src/macros")
    (:file "src/support")
@@ -78,8 +78,33 @@
    (:file "src/command-buffers")
    (:file "src/sampler")
    (:file "src/spirv")
-   #+linux(:file "src/x11")
-   #+os-windows(:file "src/win32")
-   #+darwin(:file "src/cocoa")
+   (:file "src/x11" :if-feature :linux)
+   (:file "src/win32" :if-feature :windows)
+   (:file "src/cocoa" :if-feature :darwin)
    (:file "ifc/load-foreign-libs")))
-  
+
+(defsystem cl-vulkan/glfw
+  :depends-on (cl-vulkan/common)
+  :serial t
+  :components
+  ((:file "ifc/glfw/package")
+   (:file "ifc/glfw/glfw")
+   (:file "ifc/glfw/abstract-os-compat")))
+
+(defsystem cl-vulkan/clui
+  :depends-on (cl-vulkan/common clui)
+  :components
+  ())
+
+
+(defsystem cl-vulkan/headless
+  :depends-on (cl-vulkan/common)
+  :components
+  (#++(:file "src/headless")))
+
+(defsystem cl-vulkan
+  :description "Bindings for using Vulkan with Common Lisp"
+  :depends-on (#+glfw cl-vulkan/glfw #-glfw cl-vulkan/clui)
+  :author "Andrew K Wolven <awolven@gmail.com>"
+  )
+

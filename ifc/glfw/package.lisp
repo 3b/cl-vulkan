@@ -357,3 +357,7 @@
 	   #:glfwGetProcAddress
 	   #:glfwVulkanSupported
 	   #:glfwGetRequiredInstanceExtensions))
+
+(defpackage #:vk/glfw
+  (:use :cl :$glfw #:vk)
+  (:export #:handle-mixin))

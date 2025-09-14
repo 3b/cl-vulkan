@@ -44,7 +44,7 @@ typedef struct VkWin32SurfaceCreateInfoKHR {
 
 	(setf sType VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR
 	      hinstance (h instance)
-	      hwnd (noffi::ptr-value (h window)))
+	      hwnd (ptr-value window (h window)))
 
 	(cffi:with-foreign-object (p-surface 'vk::VkSurfaceKHR)
 	  (setq err (cffi:foreign-funcall-pointer p-fn-vkCreateWin32SurfaceKHR ()

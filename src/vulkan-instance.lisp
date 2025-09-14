@@ -85,7 +85,8 @@
 	    (loop for entry in command-pools
 	       do (free-command-buffers (second entry))
 		 (vkDestroyCommandPool (h device) (h (second entry)) (h (allocator device)))))
-       finally (vkDestroyDevice (h device) (h (allocator device))))
+       finally (when device
+                 (vkDestroyDevice (h device) (h (allocator device)))))
     (vkDestroyInstance (h instance) (h (allocator instance)))
     (setq *vulkan-instance* nil)
     t))
@@ -120,10 +121,6 @@
 	  unless (find ext available-extensions :test #'string=)
 	    do (error "extension ~S is not available" ext)))
 
-  #+glfw
-  (when (zerop (glfwInit))
-    (error "GLFW failed to initialize."))
-    
   (let* ((required-extensions (get-required-instance-extensions system-object))
 	 (required-extension-count (length required-extensions))
 	 (extension-count (+ (length extension-names) required-extension-count))
@@ -262,3 +259,10 @@
 	      do (foreign-string-free (mem-aref pp-enabled-layer-names-with-validation '(:pointer :char) i)))
 	(loop for i from 0 below layer-count
 	      do (foreign-string-free (mem-aref pp-enabled-layer-names '(:pointer :char) i)))))))
+
+
+(defmacro with-instance ((&key system) &body body)
+  `(let ((*vulkan-instance* (create-instance ,system)))
+     (unwind-protect
+          (progn ,@body)
+       (destroy-vulkan-instance *vulkan-instance*))))

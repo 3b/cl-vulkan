@@ -25,10 +25,6 @@
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (require 'sb-concurrency))
 
-#+glfw
-(defclass handle-mixin ()
-  ((handle :accessor h :initarg :handle)))
-
 (defmethod print-object ((object handle-mixin) stream)
   (format stream "#<~A ~A>" (class-name (class-of object))
 	  (if (slot-boundp object 'handle) (h object) "NO HANDLE")))
@@ -97,18 +93,23 @@
    (command-buffer :reader frame-command-buffer :initarg :command-buffer)
    (command-pool :reader frame-command-pool :initarg :command-pool)))
 
-(defclass vulkan-window-mixin (logical-device-mixin)
+(defclass vulkan-device-mixin (logical-device-mixin)
   ((initialized? :initform nil :accessor window-initialized?)
-   (swapchain :initform nil :accessor swapchain)
+   (application :accessor application :initarg :app)
+   (command-pool :accessor command-pool)))
+
+(defclass vulkan-headless-mixin (vulkan-device-mixin)
+  ())
+
+(defclass vulkan-window-mixin (vulkan-device-mixin)
+  ((swapchain :initform nil :accessor swapchain)
    (render-pass :initform nil :accessor render-pass)
    (desired-format :initform VK_FORMAT_B8G8R8A8_UNORM :accessor window-desired-format
 		   :initarg :format)
    (desired-color-space :initform VK_COLOR_SPACE_SRGB_NONLINEAR_KHR
 			:accessor window-desired-color-space
 			:initarg :color-space)
-   (application :accessor application :initarg :app)
    (surface :initform nil :accessor render-surface)
-   (command-pool :accessor command-pool)
    (clear-value
     :initform (make-array 4 :element-type 'single-float
 			  :initial-contents (list 0.45f0 0.55f0 0.60f0 1.0f0))
@@ -120,12 +121,6 @@
    (frame-data :initform nil :accessor window-frame-data)
    (image-index :initform 0)
    (current-frame :initform 0)))
-
-#-glfw
-(defclass vulkan-helper-window (clui::handle-mixin)
-  ((surface :initform nil :accessor render-surface)
-   (surface-format :initform nil :accessor surface-format)
-   (render-pass :initform nil :accessor render-pass)))
 
 (defclass vulkan-window (vulkan-window-mixin)
   ())
@@ -1076,17 +1071,20 @@
 
 (defparameter +null-descriptor-set-layout+ (make-instance 'null-descriptor-set-layout))
 
-(defclass vulkan-enabled-display-mixin ()
+(defclass vulkan-enabled-mixin ()
   ((default-logical-device :accessor default-logical-device)
    (system-gpus :accessor system-gpus :initform nil)
    (pipeline-cache :initform +null-pipeline-cache+ :initarg :pipeline-cache :reader pipeline-cache)
    (default-descriptor-pool :accessor default-descriptor-pool)
    (allocation-callbacks :initform +null-allocator+ :initarg :allocator :reader allocator)
-   (window-registry :initform nil :accessor window-registry)
-   (main-window :accessor main-window)
    (memory-pool
     :accessor memory-pool
     :initform nil)))
+
+
+(defclass vulkan-enabled-display-mixin (vulkan-enabled-mixin)
+  ((window-registry :initform nil :accessor window-registry)
+   (main-window :accessor main-window)))
 
 (defclass vulkan-module ()
   ((application :reader application :initarg :application)))

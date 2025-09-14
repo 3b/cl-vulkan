@@ -37,30 +37,9 @@
 (defun set-window-close-callback (window &optional (callback-name 'window-close-callback))
   (glfwSetWindowCloseCallback (h window) (get-callback callback-name)))
 
-#+glfw
-(defun find-window (handle) ;; todo: in the ffi define this slot as int or uint
-  (gethash handle (window-registry *app*)
-	:key #'h :test #'pointer-eq))
-
-(defmethod clim:handle-event ((window vulkan-window-mixin) (event clui::window-resize-event-mixin))
-  (let ((width (clui::window-resize-event-new-width event))
-	(height (clui::window-resize-event-new-height event)))
-    (unless (or (zerop width) (zerop height))
-      (unless (render-surface window)
-	(clui::initialize-window-devices window
-					 :width width
-					 :height height))
-      (call-next-method)
-      (setf (recreate-swapchain? window) t)
-      (setf (window-initialized? window) t)
-      (values))))
-
-
-(defmethod clui::destroy-window ((window vulkan-window))
-  (destroy-os-window window))
 
 (defmethod destroy-os-window ((window vulkan-window))
-  (let* ((dpy (clui:window-display window))
+  (let* ((dpy (window-display window))
 	 (device (default-logical-device dpy))
 	 (vkinstance *vulkan-instance*))
     (vkDeviceWaitIdle device)

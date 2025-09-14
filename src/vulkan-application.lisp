@@ -20,7 +20,7 @@
 ;; WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 (in-package :vk)
 
-(defmethod shutdown-display ((dpy vulkan-enabled-display-mixin))
+(defmethod shutdown-display ((dpy vulkan-enabled-mixin))
   (let* ((device (default-logical-device dpy)))
 
     (device-wait-idle device)
@@ -47,10 +47,14 @@
     (vkDestroyDevice (h device) (h (allocator device))) 
     (values)))
 
+
+(defmethod required-vulkan-device-extensions ((display vulkan-enabled-mixin))
+  )
+
 (defmethod required-vulkan-device-extensions ((display vulkan-enabled-display-mixin))
   (list #-darwin "VK_EXT_line_rasterization"))
 
-(defmethod initialize-instance :before ((instance vulkan-enabled-display-mixin)
+(defmethod initialize-instance :before ((instance vulkan-enabled-mixin)
 					&rest initargs &key &allow-other-keys)
   (let ((vulkan-device-extensions (getf initargs :vulkan-device-extensions)))
     (remf initargs :vulkan-device-extensions)

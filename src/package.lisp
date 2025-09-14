@@ -22,10 +22,8 @@
 (in-package :cl-user)
 
 (cl:defpackage :vk
-  (:use :cl :cffi :cffi-sys :%vk #+glfw :$glfw)
+  (:use :cl :cffi :cffi-sys :%vk)
 
-  #-glfw(:import-from :clui #:h #:handle-mixin #:handle)
-  
   (:export #:vulkan-enabled-display-mixin
 	   #:VK_WHOLE_SIZE
 	   #:allocation-callbacks
