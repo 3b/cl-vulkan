@@ -53,7 +53,7 @@
   ;; at some point make-descriptor-sets a frame resource, may work for now
   (let ((descriptor-set
 	 (allocate-descriptor-set device descriptor-set-layouts descriptor-pool))
-	(count (length descriptor-infos))
+	(count (count-if-not 'null descriptor-infos))
 	(free-list))
     (with-foreign-object (p-writes '(:struct VkWriteDescriptorSet) count)
       (loop for i from 0 below count
@@ -87,38 +87,45 @@
 
 	(unwind-protect
 	     (progn
-	       (loop for i from 0 for info in descriptor-infos
-		  do (let* ((type (etypecase info
-				    (descriptor-buffer-info :buffer)
-				    (descriptor-image-info :image)))
-			    (p-info (case type
-				      (:buffer (alloc-buffer-info info))
-				      (:image (alloc-image-info info))))
-			    (p-write (mem-aptr p-writes '(:struct VkWriteDescriptorSet) i)))
-		       (with-foreign-slots ((%vk::sType
-					     %vk::dstSet
-					     %vk::dstBinding
-					     %vk::dstArrayElement
-					     %vk::descriptorType
-					     %vk::descriptorCount
-					     %vk::pBufferInfo
-					     %vk::pImageInfo
-					     %vk::pTexelBufferView)
-					    p-write
-					    (:struct VkWriteDescriptorSet))
-			 (setf %vk::sType VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET
-			       %vk::dstSet (h descriptor-set)
-			       %vk::dstBinding i
-			       %vk::dstArrayElement 0
-			       %vk::descriptorType (descriptor-type info)
-			       %vk::descriptorCount 1
-			       %vk::pBufferInfo (if (eq type :buffer)
+	       (loop
+                 with n = 0
+                 for binding from 0
+                 for info in descriptor-infos
+                 when info
+		   do (let* ((type (etypecase info
+				     (descriptor-buffer-info :buffer)
+				     (descriptor-image-info :image)))
+			     (p-info (case type
+				       (:buffer (alloc-buffer-info info))
+				       (:image (alloc-image-info info))))
+			     (p-write (mem-aptr p-writes
+                                                '(:struct VkWriteDescriptorSet)
+                                                n)))
+		        (with-foreign-slots ((%vk::sType
+					      %vk::dstSet
+					      %vk::dstBinding
+					      %vk::dstArrayElement
+					      %vk::descriptorType
+					      %vk::descriptorCount
+					      %vk::pBufferInfo
+					      %vk::pImageInfo
+					      %vk::pTexelBufferView)
+					     p-write
+					     (:struct VkWriteDescriptorSet))
+			  (setf %vk::sType VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET
+			        %vk::dstSet (h descriptor-set)
+			        %vk::dstBinding binding
+			        %vk::dstArrayElement 0
+			        %vk::descriptorType (descriptor-type info)
+			        %vk::descriptorCount 1
+			        %vk::pBufferInfo (if (eq type :buffer)
+						     p-info
+						     +nullptr+)
+			        %vk::pImageInfo (if (eq type :image)
 						    p-info
 						    +nullptr+)
-			       %vk::pImageInfo (if (eq type :image)
-						   p-info
-						   +nullptr+)
-			       %vk::pTexelBufferView +nullptr+))))
+			        %vk::pTexelBufferView +nullptr+))
+                        (incf n)))
 	       (vkUpdateDescriptorSets (h device) count p-writes 0 +nullptr+))
 	  (mapcar #'foreign-free free-list))
 	descriptor-set))))
