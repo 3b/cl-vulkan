@@ -239,14 +239,17 @@
 	  with size
        for i from 11 by 2
        for name in '("MINISCULE" "TINY" "SMALL" "REGULAR" "MEDIUM" "LARGE" "VERY-LARGE" "HUGE" "GIGANTIC" "GINORMOUS" "OBSCENE")
+       for fn = (intern (concatenate 'string "MAKE-MEMORY-RESOURCE-" name) :vk)
+       for slot = (intern (concatenate 'string name "-FREE") :vk)
        do (loop repeat count
-	     do (eval `(push (,(intern (concatenate 'string "MAKE-MEMORY-RESOURCE-" name) :vk)
-			      :memory-pool ,instance
-			      :buffer ,(memory-pool-big-buffer instance)
-			      :offset ,offset
-			      :size ,(setq size (expt 2 i)))
-			     (,(intern (concatenate 'string "MEMORY-POOL-" name "-FREE") :vk) ,instance)))
-		(incf offset size)))
+            do (push
+                (funcall fn
+                         :memory-pool instance
+                         :buffer (memory-pool-big-buffer instance)
+                         :offset offset
+                         :size (setq size (expt 2 i)))
+                (slot-value instance slot))
+	       (incf offset size)))
     (values)))
 
 (defmacro define-memory-acquisition-function (name)
