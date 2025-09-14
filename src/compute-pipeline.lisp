@@ -71,4 +71,5 @@
 				   (h allocator) p-pipelines))
 	(make-instance 'compute-pipeline :handle (mem-aref p-pipelines 'VkPipeline)
 		       :device device
-		       :allocator allocator)))))
+		       :allocator allocator
+                       :layout pipeline-layout)))))

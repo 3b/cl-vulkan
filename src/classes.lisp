@@ -965,7 +965,7 @@
   ())
 
 (defclass pipeline (handle-mixin logical-device-mixin)
-  ())
+  ((layout :reader layout :initarg :layout)))
 
 (defclass compute-pipeline (pipeline)
   ())
