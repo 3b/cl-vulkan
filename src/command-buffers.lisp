@@ -107,9 +107,11 @@
 (defun cmd-bind-descriptor-sets (command-buffer pipeline-layout descriptor-sets &optional (bind-point :graphics))
   (let ((count (length descriptor-sets)))
     (with-foreign-object (p-descriptor-sets 'VkDescriptorSet count)
-      (loop for ds in descriptor-sets
-	 do
-	   (setf (mem-aref p-descriptor-sets 'VkDescriptorSet) (h ds)))
+      (loop
+        for i from 0
+        for ds in descriptor-sets
+	do
+	   (setf (mem-aref p-descriptor-sets 'VkDescriptorSet i) (h ds)))
       (vkCmdBindDescriptorSets (h command-buffer)
 			       (ecase bind-point
 				 (:graphics VK_PIPELINE_BIND_POINT_GRAPHICS)
